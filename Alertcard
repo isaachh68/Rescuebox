@@ -1,0 +1,108 @@
+import React from 'react';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { motion } from "framer-motion";
+
+const severityConfig = {
+  leve: {
+    color: 'bg-blue-500',
+    textColor: 'text-blue-700',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    label: 'LEVE',
+    pulse: false
+  },
+  moderado: {
+    color: 'bg-yellow-500',
+    textColor: 'text-yellow-700',
+    bgColor: 'bg-yellow-50',
+    borderColor: 'border-yellow-300',
+    label: 'MODERADO',
+    pulse: false
+  },
+  critico: {
+    color: 'bg-red-600',
+    textColor: 'text-red-700',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-300',
+    label: 'CRÍTICO',
+    pulse: true
+  }
+};
+
+export default function AlertCard({ alert, onResolve }) {
+  const config = severityConfig[alert.severity] || severityConfig.moderado;
+  const isActive = alert.status === 'activa';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="relative"
+    >
+      <Card className={`
+        relative overflow-hidden border-2 transition-all duration-300
+        ${isActive ? config.borderColor : 'border-gray-200 opacity-60'}
+        ${isActive && config.pulse ? 'animate-pulse' : ''}
+      `}>
+        {/* Severity indicator bar */}
+        <div className={`h-2 ${config.color}`} />
+        
+        <div className={`p-6 ${isActive ? config.bgColor : 'bg-gray-50'}`}>
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-3 rounded-lg ${config.color} bg-opacity-20`}>
+                <AlertTriangle className={`w-6 h-6 ${config.textColor}`} />
+              </div>
+              <div>
+                <Badge className={`${config.color} text-white font-bold mb-2`}>
+                  {config.label}
+                </Badge>
+                <p className="text-xs text-gray-500">
+                  Botón #{alert.button_number || 'N/A'}
+                </p>
+              </div>
+            </div>
+            {isActive && (
+              <Button
+                onClick={() => onResolve(alert.id)}
+                size="sm"
+                className="bg-gray-800 hover:bg-gray-700"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Resolver
+              </Button>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-gray-500" />
+              <span className="font-semibold text-lg">{alert.location}</span>
+            </div>
+            
+            <div className="flex items-center gap-2 text-gray-600">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm">
+                {format(new Date(alert.timestamp), "PPp", { locale: es })}
+              </span>
+            </div>
+
+            {!isActive && alert.resolved_at && (
+              <div className="pt-3 border-t border-gray-200">
+                <p className="text-xs text-gray-500">
+                  Resuelta: {format(new Date(alert.resolved_at), "PPp", { locale: es })}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
